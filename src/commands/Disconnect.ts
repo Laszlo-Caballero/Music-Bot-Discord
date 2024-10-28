@@ -1,14 +1,11 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Discord, Slash } from "discordx";
 import { getVoiceConnection } from "@discordjs/voice";
-
-const cmd = new SlashCommandBuilder()
-  .setName("stop")
-  .setDescription("detener la musica");
+import { stopSlash } from "../config/const";
 
 @Discord()
 class Disconnect {
-  @Slash(cmd)
+  @Slash(stopSlash)
   async leave(interaction: CommandInteraction) {
     const connection = getVoiceConnection(interaction.guildId!);
 

@@ -5,7 +5,6 @@ import {
   CommandInteraction,
   GuildMember,
   MessageActionRowComponentBuilder,
-  SlashCommandBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
 } from "discord.js";
@@ -17,18 +16,7 @@ import {
 } from "@discordjs/voice";
 import ytdl from "@distube/ytdl-core";
 import { MusicPlayer } from "../utils/loadMusic";
-
-const cmd = new SlashCommandBuilder()
-  .setName("play")
-  .setDescription("reproducir musica");
-
-const cmd2 = new SlashCommandBuilder()
-  .setName("pause")
-  .setDescription("pausar musica");
-
-const cmd3 = new SlashCommandBuilder()
-  .setName("resume")
-  .setDescription("resumir musica");
+import { pauseSlash, playSlash, resumeSlash } from "../config/const";
 
 @Discord()
 class StartMusic {
@@ -45,7 +33,7 @@ class StartMusic {
     return;
   }
 
-  @Slash(cmd)
+  @Slash(playSlash)
   async play(
     @SlashOption({
       name: "url",
@@ -56,7 +44,6 @@ class StartMusic {
     url: string,
     interaction: CommandInteraction
   ): Promise<unknown> {
-    // Verifica que el usuario esté en un canal de voz
     const member = interaction.member as GuildMember;
     if (!member.voice.channel) {
       await interaction.followUp(
@@ -105,13 +92,13 @@ class StartMusic {
     }
   }
 
-  @Slash(cmd2)
+  @Slash(pauseSlash)
   async pause(interaction: CommandInteraction) {
     await interaction.reply("pusado");
     return;
   }
 
-  @Slash(cmd3)
+  @Slash(resumeSlash)
   async resume(interaction: CommandInteraction) {
     await interaction.reply("resumir");
   }
