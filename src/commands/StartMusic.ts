@@ -16,24 +16,23 @@ import {
   AudioPlayerStatus,
 } from "@discordjs/voice";
 import ytdl from "@distube/ytdl-core";
-import { MusicPlayer } from "../utils/loadMusic";
+import { MusicPlayer } from "../class/loadMusic";
 import { pauseSlash, playSlash, resumeSlash, skipSlash } from "../config/const";
-import { Stack } from "../class/stack";
 import { Nodo } from "../class/nodo";
+import yts from "yt-search";
 
 @Discord()
 class StartMusic {
   private connection: VoiceConnection | null = null;
   private player = createAudioPlayer();
-  private music: MusicPlayer = new MusicPlayer();
-  private musicStack = new Stack<string>();
+  private music: MusicPlayer = new MusicPlayer(this.player);
 
   @SelectMenuComponent({ id: "musicas" })
   async handle(interaction: StringSelectMenuInteraction): Promise<unknown> {
     await interaction.deferReply();
     const value = interaction.values?.[0];
 
-    this.musicStack.push(new Nodo(value));
+    this.music.musicStack.push(new Nodo(value));
 
     await interaction.followUp(`Se inserto la siguiente cancion: ${value}`);
     return;
@@ -67,13 +66,14 @@ class StartMusic {
       });
       this.connection.subscribe(this.player);
 
-      // Escucha cuando termine una canción
       this.player.on(AudioPlayerStatus.Idle, () => {
-        this.playNextSong(interaction);
+        this.music.playNextSong(interaction);
       });
     }
 
-    const music = ytdl(url, { filter: "audioonly" });
+    const newUrl = ytdl.validateURL(url) ? url : (await yts(url)).videos[0].url;
+
+    const music = ytdl(newUrl, { filter: "audioonly" });
     const resource = createAudioResource(music);
 
     this.player.play(resource);
@@ -88,27 +88,11 @@ class StartMusic {
         menu
       );
 
-    await interaction.reply(`🎶 Reproduciendo música: ${url}`);
+    await interaction.reply(`🎶 Reproduciendo música: ${newUrl}`);
     await interaction.followUp({
       content: "Música recomendada:",
       components: [buttonRow],
     });
-  }
-
-  private async playNextSong(interaction: CommandInteraction) {
-    const nextSongUrl = this.musicStack.pop()?.dato;
-    if (nextSongUrl) {
-      const stream = ytdl(nextSongUrl, { filter: "audioonly" });
-      const resource = createAudioResource(stream);
-      this.player.play(resource);
-
-      // Anuncia la canción
-      await interaction.followUp(`🎶 Reproduciendo música: ${nextSongUrl}`);
-    } else {
-      await interaction.followUp(
-        "La cola está vacía. No hay más canciones para reproducir."
-      );
-    }
   }
 
   @Slash(pauseSlash)
