@@ -15,3 +15,7 @@ export const resumeSlash = new SlashCommandBuilder()
 export const stopSlash = new SlashCommandBuilder()
   .setName("stop")
   .setDescription("detener la musica");
+
+export const skipSlash = new SlashCommandBuilder()
+  .setName("skip")
+  .setDescription("ir a la siguiente cancion");

@@ -13,23 +13,45 @@ import {
   createAudioResource,
   joinVoiceChannel,
   VoiceConnection,
+  AudioPlayerStatus,
 } from "@discordjs/voice";
 import ytdl from "@distube/ytdl-core";
 import { MusicPlayer } from "../utils/loadMusic";
-import { pauseSlash, playSlash, resumeSlash } from "../config/const";
+import { pauseSlash, playSlash, resumeSlash, skipSlash } from "../config/const";
+import { Stack } from "../class/stack";
+import { Nodo } from "../class/nodo";
 
 @Discord()
 class StartMusic {
   private connection: VoiceConnection | null = null;
+  private player = createAudioPlayer();
   private music: MusicPlayer = new MusicPlayer();
+  private musicStack = new Stack<string>();
+
+  constructor() {
+    // Suscribirse al evento `idle` del reproductor de audio para saber cuando una canción termina
+    this.player.on(AudioPlayerStatus.Idle, async () => {
+      if (this.musicStack.count == 0) {
+        console.log(
+          "La cola está vacía. No hay más canciones para reproducir."
+        );
+      } else {
+        const nextSongUrl = this.musicStack.pop()?.dato;
+        if (nextSongUrl) {
+          await this.playNextSong(nextSongUrl);
+        }
+      }
+    });
+  }
 
   @SelectMenuComponent({ id: "musicas" })
   async handle(interaction: StringSelectMenuInteraction): Promise<unknown> {
     await interaction.deferReply();
-
     const value = interaction.values?.[0];
-    interaction.followUp(`you have selected role: ${value}`);
 
+    this.musicStack.push(new Nodo(value));
+
+    await interaction.followUp(`Se inserto la siguiente cancion: ${value}`);
     return;
   }
 
@@ -46,13 +68,12 @@ class StartMusic {
   ): Promise<unknown> {
     const member = interaction.member as GuildMember;
     if (!member.voice.channel) {
-      await interaction.followUp(
+      await interaction.reply(
         "¡Debes estar en un canal de voz para usar este comando!"
       );
       return;
     }
 
-    // Unirse al canal de voz del usuario
     const voiceChannel = member.voice.channel;
     if (!this.connection) {
       this.connection = joinVoiceChannel({
@@ -61,45 +82,49 @@ class StartMusic {
         adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
       });
     }
-    const player = createAudioPlayer();
+
     const music = ytdl(url, { filter: "audioonly" });
     const resource = createAudioResource(music);
 
-    try {
-      player.play(resource);
-      const menu = new StringSelectMenuBuilder()
-        .addOptions(await this.music.getRecomendations(url))
-        .setCustomId("musicas");
+    this.player.play(resource);
+    this.connection.subscribe(this.player);
 
-      const buttonRow =
-        new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-          menu
-        );
+    const menu = new StringSelectMenuBuilder()
+      .addOptions(await this.music.getRecomendations(url))
+      .setCustomId("musicas");
 
-      this.connection.subscribe(player);
+    const buttonRow =
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+        menu
+      );
 
-      await interaction.reply(`🎶 Reproduciendo música. ${url}`);
+    await interaction.reply(`🎶 Reproduciendo música: ${url}`);
+    await interaction.followUp({
+      content: "Música recomendada:",
+      components: [buttonRow],
+    });
+  }
 
-      await interaction.followUp({
-        content: "musica Recomendada",
-        components: [buttonRow],
-      });
-      return;
-    } catch (error) {
-      console.log(error);
-      await interaction.reply("error");
-      return;
-    }
+  private async playNextSong(url: string) {
+    const music = ytdl(url, { filter: "audioonly" });
+    const resource = createAudioResource(music);
+    this.player.play(resource);
   }
 
   @Slash(pauseSlash)
   async pause(interaction: CommandInteraction) {
-    await interaction.reply("pusado");
-    return;
+    this.player.pause();
+    await interaction.reply("Pausado");
   }
 
   @Slash(resumeSlash)
   async resume(interaction: CommandInteraction) {
-    await interaction.reply("resumir");
+    this.player.unpause();
+    await interaction.reply("Reanudado");
+  }
+
+  @Slash(skipSlash)
+  async skip(interaction: CommandInteraction) {
+    await interaction.reply("Skip");
   }
 }
