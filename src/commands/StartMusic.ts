@@ -28,22 +28,6 @@ class StartMusic {
   private music: MusicPlayer = new MusicPlayer();
   private musicStack = new Stack<string>();
 
-  constructor() {
-    // Suscribirse al evento `idle` del reproductor de audio para saber cuando una canción termina
-    this.player.on(AudioPlayerStatus.Idle, async () => {
-      if (this.musicStack.count == 0) {
-        console.log(
-          "La cola está vacía. No hay más canciones para reproducir."
-        );
-      } else {
-        const nextSongUrl = this.musicStack.pop()?.dato;
-        if (nextSongUrl) {
-          await this.playNextSong(nextSongUrl);
-        }
-      }
-    });
-  }
-
   @SelectMenuComponent({ id: "musicas" })
   async handle(interaction: StringSelectMenuInteraction): Promise<unknown> {
     await interaction.deferReply();
@@ -81,6 +65,12 @@ class StartMusic {
         guildId: voiceChannel.guild.id,
         adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
       });
+      this.connection.subscribe(this.player);
+
+      // Escucha cuando termine una canción
+      this.player.on(AudioPlayerStatus.Idle, () => {
+        this.playNextSong(interaction);
+      });
     }
 
     const music = ytdl(url, { filter: "audioonly" });
@@ -105,10 +95,20 @@ class StartMusic {
     });
   }
 
-  private async playNextSong(url: string) {
-    const music = ytdl(url, { filter: "audioonly" });
-    const resource = createAudioResource(music);
-    this.player.play(resource);
+  private async playNextSong(interaction: CommandInteraction) {
+    const nextSongUrl = this.musicStack.pop()?.dato;
+    if (nextSongUrl) {
+      const stream = ytdl(nextSongUrl, { filter: "audioonly" });
+      const resource = createAudioResource(stream);
+      this.player.play(resource);
+
+      // Anuncia la canción
+      await interaction.followUp(`🎶 Reproduciendo música: ${nextSongUrl}`);
+    } else {
+      await interaction.followUp(
+        "La cola está vacía. No hay más canciones para reproducir."
+      );
+    }
   }
 
   @Slash(pauseSlash)
