@@ -41,8 +41,8 @@ class StartMusic {
   @Slash(playSlash)
   async play(
     @SlashOption({
-      name: "url",
-      description: "URL de YouTube de la canción",
+      name: "url_name",
+      description: "URL o Nombre de la canción",
       required: true,
       type: ApplicationCommandOptionType.String,
     })
