@@ -39,3 +39,14 @@ Un bot de Discord que permite reproducir música desde YouTube en tu servidor.
 3.  /pause: Pausa la reproducción de la música.
 4.  /resume: Reanuda la reproducción.
 5.  /skip: Salta a la siguiente canción en la cola.
+
+## Despliege
+
+De preferencia usar RailWay para desplegar el bot.
+
+1. sincronizar el repo con Railway
+2. configurar las variables de entorno
+3. poner este comando en Custom Start Command
+   ```bash
+   sudo apt update && sudo apt install -y ffmpeg && npm start
+   ```
