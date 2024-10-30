@@ -58,44 +58,49 @@ class StartMusic {
     }
 
     const voiceChannel = member.voice.channel;
-    if (!this.connection) {
-      this.connection = joinVoiceChannel({
-        channelId: voiceChannel.id,
-        guildId: voiceChannel.guild.id,
-        adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
-      });
-      this.connection.subscribe(this.player);
 
-      this.player.on(AudioPlayerStatus.Idle, () => {
-        this.music.playNextSong(interaction);
-      });
-    }
-    const newUrl = ytdl.validateURL(url) ? url : (await yts(url)).videos[0].url;
-    if (this.player.state.status === AudioPlayerStatus.Playing) {
-      this.music.musicStack.push(new Nodo(newUrl));
-      await interaction.reply(`🎶 Canción añadida a la lista: ${newUrl}`);
-      return;
-    } else {
-      const music = ytdl(newUrl, { filter: "audioonly" });
-      const resource = createAudioResource(music);
-      this.player.play(resource);
-      this.connection.subscribe(this.player);
-    }
-
-    const menu = new StringSelectMenuBuilder()
-      .addOptions(await this.music.getRecomendations(url))
-      .setCustomId("musicas");
-
-    const buttonRow =
-      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-        menu
-      );
-
-    await interaction.reply(`🎶 Reproduciendo música: ${newUrl}`);
-    await interaction.followUp({
-      content: "Música recomendada:",
-      components: [buttonRow],
+    this.connection = joinVoiceChannel({
+      channelId: voiceChannel.id,
+      guildId: voiceChannel.guild.id,
+      adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
     });
+    this.connection.subscribe(this.player);
+
+    this.player.on(AudioPlayerStatus.Idle, () => {
+      this.music.playNextSong(interaction);
+    });
+    try {
+      const newUrl = ytdl.validateURL(url)
+        ? url
+        : (await yts(url)).videos[0].url;
+      if (this.player.state.status === AudioPlayerStatus.Playing) {
+        this.music.musicStack.push(new Nodo(newUrl));
+        await interaction.reply(`🎶 Canción añadida a la lista: ${newUrl}`);
+        return;
+      } else {
+        const music = ytdl(newUrl, { filter: "audioonly" });
+        const resource = createAudioResource(music);
+        this.player.play(resource);
+        this.connection.subscribe(this.player);
+      }
+
+      const menu = new StringSelectMenuBuilder()
+        .addOptions(await this.music.getRecomendations(url))
+        .setCustomId("musicas");
+
+      const buttonRow =
+        new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+          menu
+        );
+
+      await interaction.reply(`🎶 Reproduciendo música: ${newUrl}`);
+      await interaction.followUp({
+        content: "Música recomendada:",
+        components: [buttonRow],
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   @Slash(pauseSlash)
@@ -112,6 +117,7 @@ class StartMusic {
 
   @Slash(skipSlash)
   async skip(interaction: CommandInteraction) {
-    await interaction.reply("Skip");
+    await interaction.deferReply();
+    this.music.playNextSong(interaction);
   }
 }
