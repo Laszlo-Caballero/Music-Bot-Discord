@@ -53,7 +53,7 @@ class StartMusic {
 
     const member = interaction.member as GuildMember;
     if (!member.voice.channel) {
-      await interaction.reply(
+      await interaction.editReply(
         "¡Debes estar en un canal de voz para usar este comando!"
       );
       return;
@@ -61,23 +61,28 @@ class StartMusic {
 
     const voiceChannel = member.voice.channel;
 
-    this.connection = joinVoiceChannel({
-      channelId: voiceChannel.id,
-      guildId: voiceChannel.guild.id,
-      adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
-    });
-    this.connection.subscribe(this.player);
+    if (!this.connection) {
+      this.connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: voiceChannel.guild.id,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
+      });
+      this.connection.subscribe(this.player);
 
-    this.player.on(AudioPlayerStatus.Idle, () => {
-      this.music.playNextSong(interaction);
-    });
+      this.player.on(AudioPlayerStatus.Idle, () => {
+        this.music.playNextSong(interaction);
+      });
+    }
+
     try {
       const newUrl = ytdl.validateURL(url)
         ? url
         : (await yts(url)).videos[0].url;
+
+      // Si el reproductor ya está reproduciendo, añade la canción a la cola
       if (this.player.state.status === AudioPlayerStatus.Playing) {
         this.music.musicStack.push(new Nodo(newUrl));
-        await interaction.reply(`🎶 Canción añadida a la lista: ${newUrl}`);
+        await interaction.editReply(`🎶 Canción añadida a la lista: ${newUrl}`);
         return;
       } else {
         const music = ytdl(newUrl, { filter: "audioonly" });
@@ -95,13 +100,16 @@ class StartMusic {
           menu
         );
 
-      await interaction.reply(`🎶 Reproduciendo música: ${newUrl}`);
+      await interaction.editReply(`🎶 Reproduciendo música: ${newUrl}`);
       await interaction.followUp({
         content: "Música recomendada:",
         components: [buttonRow],
       });
     } catch (error) {
-      console.log(error);
+      console.error("Error al reproducir la canción:", error);
+      await interaction.editReply(
+        "Hubo un error al intentar reproducir la canción."
+      );
     }
   }
 
