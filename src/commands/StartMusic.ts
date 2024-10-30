@@ -70,14 +70,17 @@ class StartMusic {
         this.music.playNextSong(interaction);
       });
     }
-
     const newUrl = ytdl.validateURL(url) ? url : (await yts(url)).videos[0].url;
-
-    const music = ytdl(newUrl, { filter: "audioonly" });
-    const resource = createAudioResource(music);
-
-    this.player.play(resource);
-    this.connection.subscribe(this.player);
+    if (this.player.state.status === AudioPlayerStatus.Playing) {
+      this.music.musicStack.push(new Nodo(newUrl));
+      await interaction.reply(`🎶 Canción añadida a la lista: ${newUrl}`);
+      return;
+    } else {
+      const music = ytdl(newUrl, { filter: "audioonly" });
+      const resource = createAudioResource(music);
+      this.player.play(resource);
+      this.connection.subscribe(this.player);
+    }
 
     const menu = new StringSelectMenuBuilder()
       .addOptions(await this.music.getRecomendations(url))

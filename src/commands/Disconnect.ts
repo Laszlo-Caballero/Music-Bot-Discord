@@ -1,4 +1,4 @@
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { CommandInteraction } from "discord.js";
 import { Discord, Slash } from "discordx";
 import { getVoiceConnection } from "@discordjs/voice";
 import { stopSlash } from "../config/const";

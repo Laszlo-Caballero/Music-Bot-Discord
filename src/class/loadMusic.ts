@@ -36,7 +36,7 @@ export class MusicPlayer {
   }
 
   public async playNextSong(interaction: CommandInteraction) {
-    const nextSongUrl = this.musicStack.pop()?.dato;
+    const nextSongUrl = this.musicStack.pop()?.dato ?? "";
     if (nextSongUrl) {
       const stream = ytdl(nextSongUrl, { filter: "audioonly" });
       const resource = createAudioResource(stream);
