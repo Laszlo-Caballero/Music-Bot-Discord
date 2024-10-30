@@ -53,6 +53,6 @@ De preferencia usar RailWay para desplegar el bot.
 
 ### TODOS
 
-1. Reproducir playlist de youtube [ ]
-2. Reproducir links de spotify y playlist [ ]
-3. Reproducir links de dezzer (no se 😄) [ ]
+- [ ] Reproducir playlist de youtube
+- [ ] Reproducir links de spotify y playlist
+- [ ] Reproducir links de dezzer (no se 😄)
