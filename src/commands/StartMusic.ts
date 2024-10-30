@@ -17,7 +17,13 @@ import {
 } from "@discordjs/voice";
 import ytdl from "@distube/ytdl-core";
 import { MusicPlayer } from "../class/loadMusic";
-import { pauseSlash, playSlash, resumeSlash, skipSlash } from "../config/const";
+import {
+  pauseSlash,
+  playSlash,
+  resumeSlash,
+  skipSlash,
+  stopSlash,
+} from "../config/const";
 import { Nodo } from "../class/nodo";
 import yts from "yt-search";
 
@@ -61,18 +67,16 @@ class StartMusic {
 
     const voiceChannel = member.voice.channel;
 
-    if (!this.connection) {
-      this.connection = joinVoiceChannel({
-        channelId: voiceChannel.id,
-        guildId: voiceChannel.guild.id,
-        adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
-      });
-      this.connection.subscribe(this.player);
+    this.connection = joinVoiceChannel({
+      channelId: voiceChannel.id,
+      guildId: voiceChannel.guild.id,
+      adapterCreator: voiceChannel.guild.voiceAdapterCreator as any,
+    });
+    this.connection.subscribe(this.player);
 
-      this.player.on(AudioPlayerStatus.Idle, () => {
-        this.music.playNextSong(interaction);
-      });
-    }
+    this.player.on(AudioPlayerStatus.Idle, () => {
+      this.music.playNextSong(interaction);
+    });
 
     try {
       const newUrl = ytdl.validateURL(url)
