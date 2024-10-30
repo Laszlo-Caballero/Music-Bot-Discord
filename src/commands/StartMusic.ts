@@ -49,6 +49,8 @@ class StartMusic {
     url: string,
     interaction: CommandInteraction
   ): Promise<unknown> {
+    await interaction.deferReply();
+
     const member = interaction.member as GuildMember;
     if (!member.voice.channel) {
       await interaction.reply(
