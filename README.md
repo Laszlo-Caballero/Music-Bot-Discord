@@ -12,7 +12,7 @@ Un bot de Discord que permite reproducir música desde YouTube en tu servidor.
 1. **Clona este repositorio** (o descarga los archivos):
 
    ```bash
-   git clone <URL_DE_TU_REPOSITORIO>
+   git clone https://github.com/Laszlo-Caballero/Music-Bot-Discord.git
    ```
 
 2. **Variables de entorno**:
