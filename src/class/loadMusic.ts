@@ -26,7 +26,7 @@ export class MusicPlayer {
       const result = await yts(url);
       const newUrl = result.videos[0].url;
       const info = await ytdl.getBasicInfo(newUrl);
-      return info.related_videos.map((value) => {
+      return info.related_videos.slice(0, 20).map((value) => {
         return {
           label: value.title ?? "",
           value: `https://www.youtube.com/watch?v=${value.id}`,

@@ -17,13 +17,7 @@ import {
 } from "@discordjs/voice";
 import ytdl from "@distube/ytdl-core";
 import { MusicPlayer } from "../class/loadMusic";
-import {
-  pauseSlash,
-  playSlash,
-  resumeSlash,
-  skipSlash,
-  stopSlash,
-} from "../config/const";
+import { pauseSlash, playSlash, resumeSlash, skipSlash } from "../config/const";
 import { Nodo } from "../class/nodo";
 import yts from "yt-search";
 

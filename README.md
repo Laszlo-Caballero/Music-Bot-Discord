@@ -21,15 +21,15 @@ Un bot de Discord que permite reproducir música desde YouTube en tu servidor.
    ```
 3. **Instalar dependencias**
    ```bash
-       npm install
+   npm install
    ```
 4. **Hacer build**
    ```bash
-       npm run build
+   npm run build
    ```
 5. **Ejecutar bot**
    ```bash
-       npm start
+   npm start
    ```
 
 ## Comandos
