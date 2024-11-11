@@ -16,7 +16,7 @@ export class MusicPlayer {
   async getRecomendations(url: string): Promise<recomendations[]> {
     if (ytdl.validateURL(url)) {
       const info = await ytdl.getBasicInfo(url);
-      return info.related_videos.map((value) => {
+      return info.related_videos.slice(0, 20).map((value) => {
         return {
           label: value.title ?? "",
           value: `https://www.youtube.com/watch?v=${value.id}`,
