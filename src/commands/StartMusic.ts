@@ -90,7 +90,7 @@ class StartMusic {
       }
 
       const menu = new StringSelectMenuBuilder()
-        .addOptions((await this.music.getRecomendations(url)).slice(0, 21))
+        .addOptions(await this.music.getRecomendations(url))
         .setCustomId("musicas");
 
       const buttonRow =

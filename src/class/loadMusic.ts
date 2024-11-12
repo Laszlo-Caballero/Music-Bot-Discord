@@ -18,7 +18,7 @@ export class MusicPlayer {
       const info = await ytdl.getBasicInfo(url);
       return info.related_videos.slice(0, 20).map((value) => {
         return {
-          label: value.title ?? "",
+          label: value.title?.slice(0, 70) ?? "",
           value: `https://www.youtube.com/watch?v=${value.id}`,
         };
       });
@@ -28,7 +28,7 @@ export class MusicPlayer {
       const info = await ytdl.getBasicInfo(newUrl);
       return info.related_videos.slice(0, 20).map((value) => {
         return {
-          label: value.title ?? "",
+          label: value.title?.slice(0, 70) ?? "",
           value: `https://www.youtube.com/watch?v=${value.id}`,
         };
       });
