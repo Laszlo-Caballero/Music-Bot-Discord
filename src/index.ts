@@ -3,6 +3,8 @@ import { importx } from "@discordx/importer";
 import { config } from "dotenv";
 import path from "path";
 import { GatewayIntentBits } from "discord.js";
+import ffmpeg from "ffmpeg-static";
+
 config();
 
 const client = new Client({
