@@ -8,9 +8,6 @@
     "dev": "tsc && nodemon dist/index.js",
     "test": "nodemon test/index.ts"
   },
-  "engines": {
-    "node": "20.x"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
