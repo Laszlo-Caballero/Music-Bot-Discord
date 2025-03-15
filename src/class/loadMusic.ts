@@ -4,6 +4,8 @@ import { recomendations } from "../types/types";
 import { CommandInteraction } from "discord.js";
 import { Stack } from "./stack";
 import yts from "yt-search";
+import Innertube from "youtubei.js/agnostic";
+import { Readable } from "stream";
 
 export class MusicPlayer {
   public musicStack = new Stack<string>();
@@ -35,11 +37,19 @@ export class MusicPlayer {
     }
   }
 
-  public async playNextSong(interaction: CommandInteraction) {
+  public async playNextSong(
+    interaction: CommandInteraction,
+    youtube: Innertube
+  ) {
     const nextSongUrl = this.musicStack.pop()?.dato ?? "";
+
     if (nextSongUrl) {
-      const stream = ytdl(nextSongUrl, { filter: "audioonly" });
-      const resource = createAudioResource(stream);
+      const newUrl = (await yts(nextSongUrl)).videos[0];
+
+      const music = await youtube.download(newUrl.videoId);
+      const nodeStream = Readable.fromWeb(music as any);
+
+      const resource = createAudioResource(nodeStream);
       this.player?.play(resource);
 
       // Anuncia la canción

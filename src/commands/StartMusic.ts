@@ -14,18 +14,22 @@ import {
   joinVoiceChannel,
   VoiceConnection,
   AudioPlayerStatus,
+  StreamType,
 } from "@discordjs/voice";
-import ytdl from "@distube/ytdl-core";
 import { MusicPlayer } from "../class/loadMusic";
 import { pauseSlash, playSlash, resumeSlash, skipSlash } from "../config/const";
 import { Nodo } from "../class/nodo";
 import yts from "yt-search";
+import play from "play-dl";
+import { Innertube } from "youtubei.js";
+import { Readable } from "stream";
 
 @Discord()
 class StartMusic {
   private connection: VoiceConnection | null = null;
   private player = createAudioPlayer();
   private music: MusicPlayer = new MusicPlayer(this.player);
+  private youtube = Innertube.create();
 
   @SelectMenuComponent({ id: "musicas" })
   async handle(interaction: StringSelectMenuInteraction): Promise<unknown> {
@@ -50,7 +54,6 @@ class StartMusic {
     interaction: CommandInteraction
   ): Promise<unknown> {
     await interaction.deferReply();
-
     const member = interaction.member as GuildMember;
     if (!member.voice.channel) {
       await interaction.editReply(
@@ -58,6 +61,8 @@ class StartMusic {
       );
       return;
     }
+
+    const youtube = await this.youtube;
 
     const voiceChannel = member.voice.channel;
 
@@ -69,28 +74,30 @@ class StartMusic {
     this.connection.subscribe(this.player);
 
     this.player.on(AudioPlayerStatus.Idle, () => {
-      this.music.playNextSong(interaction);
+      this.music.playNextSong(interaction, youtube);
     });
 
     try {
-      const newUrl = ytdl.validateURL(url)
-        ? url
-        : (await yts(url)).videos[0].url;
+      const newUrl = (await yts(url)).videos[0];
 
       // Si el reproductor ya está reproduciendo, añade la canción a la cola
       if (this.player.state.status === AudioPlayerStatus.Playing) {
-        this.music.musicStack.push(new Nodo(newUrl));
-        await interaction.editReply(`🎶 Canción añadida a la lista: ${newUrl}`);
+        this.music.musicStack.push(new Nodo(newUrl.url));
+        await interaction.editReply(
+          `🎶 Canción añadida a la lista: ${newUrl.url}`
+        );
         return;
       } else {
-        const music = ytdl(newUrl, { filter: "audioonly" });
-        const resource = createAudioResource(music);
+        const music = await youtube.download(newUrl.videoId);
+        const nodeStream = Readable.fromWeb(music as any);
+
+        const resource = createAudioResource(nodeStream);
         this.player.play(resource);
         this.connection.subscribe(this.player);
       }
 
       const menu = new StringSelectMenuBuilder()
-        .addOptions(await this.music.getRecomendations(url))
+        .addOptions(await this.music.getRecomendations(newUrl.url))
         .setCustomId("musicas");
 
       const buttonRow =
@@ -98,7 +105,7 @@ class StartMusic {
           menu
         );
 
-      await interaction.editReply(`🎶 Reproduciendo música: ${newUrl}`);
+      await interaction.editReply(`🎶 Reproduciendo música: ${newUrl.url}`);
       await interaction.followUp({
         content: "Música recomendada:",
         components: [buttonRow],
@@ -126,6 +133,8 @@ class StartMusic {
   @Slash(skipSlash)
   async skip(interaction: CommandInteraction) {
     await interaction.deferReply();
-    this.music.playNextSong(interaction);
+    const youtube = await this.youtube;
+
+    this.music.playNextSong(interaction, youtube);
   }
 }
